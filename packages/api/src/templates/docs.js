@@ -79,13 +79,14 @@ export default function MDXLayout({ data = {} }) {
 
   const apiObj = formatApi(endpoints);
 
-  let urlPathName = mdx.frontmatter?.paths[0];
-  if(urlPathName) {
-      urlPathName = urlPathName.split("/");
-      urlPathName = urlPathName[urlPathName.length - 1];
-      apiObj.v1[urlPathName].status = true;
+  if(Array.isArray(mdx.frontmatter?.paths)) {
+      let urlPathName = mdx.frontmatter?.paths[0];
+      if (urlPathName) {
+          urlPathName = urlPathName.split("/");
+          urlPathName = urlPathName[urlPathName.length - 1];
+          apiObj.v1[urlPathName].status = true;
+      }
   }
-  // console.log(apiObj);
 
   function renderAPIDoc() {
     // TODO refactor this functionendPoint
