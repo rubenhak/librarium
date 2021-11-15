@@ -198,8 +198,8 @@ function ResponseMessages({ responseMessages }) {
     return null;
   }
 
-  return responseMessages.map(response => (
-    <Response type="response">
+  return responseMessages.map((response, index) => (
+    <Response key={index} type="response">
       <label>HTTP code:</label> {response.code} <br />
       <label>Description:</label> {response.description} <br />
       {response.schema && response.schema !== 'null' && (
@@ -213,39 +213,41 @@ function ResponseMessages({ responseMessages }) {
 }
 
 export default function Swagger(props) {
+    console.log(props, "props");
   return (
     <div>
-      {props.documentation.apis.map(api =>
+      {props.documentation.apis.map((api, index) =>
         api.operations.map(operation => (
-          <Operation key={operation.method + api.path}>
-            <Signature>
-              {operation?.description?.includes("Deprecated") && <StyledDeprecatedTag />}
-              <Button color={colors[operation.method]}>{operation.method}</Button>&#8594;
-              <h4>{props.prefix + normalizePath(api.path)}</h4>
-            </Signature>
-            <OperationWrap>
-              <div>
-                <Property label="summary" value={operation.summary} />
-                <Property label="description" value={operation.description} />
-                <Parameters
-                  title="Parameters"
-                  parameters={operation?.parameters}
-                  method={operation.method}
-                  path={api?.path}
-                />
-                <Parameters
-                  title="Path parameters"
-                  parameters={operation?.pathParameters}
-                />
-                <RequestBody body={operation.body} />
-              </div>
-              <ResponsesWrapper>
-                <ResponseMessages responseMessages={operation.responseMessages} />
-              </ResponsesWrapper>
-            </OperationWrap>
-            <Hr />
-          </Operation>
-        ))
+            <div style={{marginBottom: 120, position: "relative"}} id={operation.operationId}
+                 key={operation.method + api.path}>
+                <Signature>
+                    {operation?.description?.includes("Deprecated") && <StyledDeprecatedTag/>}
+                    <Button color={colors[operation.method]}>{operation.method}</Button>&#8594;
+                    <h4>{props.prefix + normalizePath(api.path)}</h4>
+                </Signature>
+                <OperationWrap>
+                    <div>
+                        <Property label="summary" value={operation.summary}/>
+                        <Property label="description" value={operation.description}/>
+                        <Parameters
+                            title="Parameters"
+                            parameters={operation?.parameters}
+                            method={operation.method}
+                            path={api?.path}
+                        />
+                        <Parameters
+                            title="Path parameters"
+                            parameters={operation?.pathParameters}
+                        />
+                        <RequestBody body={operation.body}/>
+                    </div>
+                    <ResponsesWrapper>
+                        <ResponseMessages key={index} responseMessages={operation.responseMessages}/>
+                    </ResponsesWrapper>
+                </OperationWrap>
+                <Hr/>
+            </div>)
+        )
       )}
     </div>
   );

@@ -97,13 +97,12 @@ const SidebarLayout = ({
   const location = useLocation();
   function renderMenuItem({ link, title, icon, isActive = () => false }) {
     return (
-      <Link className={isActive(location) ? 'navbar isActive' : 'navbar'} to={link}>
+      <Link key={title} className={isActive(location) ? 'navbar isActive' : 'navbar'} to={link}>
         {icon && <FontAwesomeIcon icon={icon} />}
         {title}
       </Link>
     );
   }
-
   return (
     <Sidebar>
       <LogoWrap>

@@ -3,6 +3,7 @@ import { graphql } from 'gatsby';
 import { Layout, DocsLayout } from '@librarium/shared';
 import config from '../../config';
 import ApiSidebar from '../components/ApiSidebar';
+import AppSidebar from "../components/Sidebar";
 import Swagger from '../components/Swagger';
 import App from '../App';
 
@@ -12,6 +13,35 @@ import v1 from '../../content/v1/api.json';
 const APIS = {
   v1,
 };
+
+
+
+function formatApi(endPoints) {
+    let apiObj = {};
+    for(var index = 0; index < endPoints.length; index++) {
+        let endPoint = endPoints[index].path;
+        let operations = endPoints[index].operations;
+        let arr = endPoint.split("/");
+        arr.shift();
+        fillInApiObj(0, arr, operations, apiObj);
+    }
+    return apiObj;
+}
+
+function fillInApiObj(index, arr, operations, obj) {
+    let elem = arr[index];
+    if(index == (arr.length -1)) {
+        obj[elem] = obj[elem] || {};
+        obj[elem]["operations"] = operations;
+        return;
+    }
+    if(!obj[elem]) {
+        obj[elem] = {
+            status : false
+        };
+    }
+    fillInApiObj(index+1, arr, operations, obj[elem])
+}
 
 export default function MDXLayout({ data = {} }) {
   const {
@@ -26,15 +56,85 @@ export default function MDXLayout({ data = {} }) {
     return DocsLayout.calculateMenuTree(allMdx.edges, { ...config, base: '/api' });
   }, [allMdx.edges]);
 
+  const api = APIS[mdx?.fields?.version || "v1"];
+  const paths = mdx.frontmatter?.paths;
+  const endpoints = Object.keys(api.paths)
+    .map(path => {
+        return {
+            path,
+            operations: Object.keys(api.paths[path])
+                .filter(method => method !== "parameters")
+                .map(method => {
+                    const apiMethod = api.paths[path][method]
+                    const parameters = apiMethod?.parameters;
+                    return ({
+                        method,
+                        ...apiMethod,
+                        parameters: parameters?.filter(parameter => parameter.name !== "body") || [],
+                        pathParameters: api.paths[path]?.parameters || [],
+                    })
+                }),
+        };
+    });
+
+  const apiObj = formatApi(endpoints);
+
+  let urlPathName = mdx.frontmatter?.paths[0];
+  if(urlPathName) {
+      urlPathName = urlPathName.split("/");
+      urlPathName = urlPathName[urlPathName.length - 1];
+      apiObj.v1[urlPathName].status = true;
+  }
+  // console.log(apiObj);
 
   function renderAPIDoc() {
-    // TODO refactor this function
+    // TODO refactor this functionendPoint
     const paths = mdx.frontmatter?.paths;
     if (!paths || !mdx?.fields?.version) {
       return null;
     }
 
     const api = APIS[mdx?.fields?.version];
+    const endpoints = Object.keys(api.paths)
+      .filter(path => paths.some(entry => path.startsWith(entry)))
+      .map(path => {
+              return {
+                  path,
+                  operations: Object.keys(api.paths[path])
+                      .filter(method => method !== "parameters")
+                      .map(method => {
+                          const apiMethod = api.paths[path][method]
+                          const parameters = apiMethod?.parameters;
+                          const responses = apiMethod?.responses;
+                          const bodyParameter = parameters?.find(parameter => parameter.name === "body");
+                          let body;
+
+                          if (bodyParameter) {
+                              body = bodyParameter.schema?.$ref ?
+                                  extractDefinition(bodyParameter.schema?.$ref) :
+                                  renderProperties(bodyParameter.schema);
+                          }
+
+                          return ({
+                              method,
+                              ...apiMethod,
+                              body: JSON.stringify(body, null, 2),
+                              parameters: parameters?.filter(parameter => parameter.name !== "body") || [],
+                              pathParameters: api.paths[path]?.parameters || [],
+                              responseMessages: Object.keys(responses || {}).map(
+                                  response => {
+                                      return ({
+                                          code: response,
+                                          ...responses[response],
+                                          schema: JSON.stringify(extractDefinition(responses[response]?.schema?.$ref), null, 2),
+                                      })
+                                  }
+                              ),
+                          })
+                      }),
+              };
+          });
+
 
     function renderProperties(defObject) {
       // if there are no properties, render the format or type (this seems to apply only for timestamps)
@@ -98,48 +198,6 @@ export default function MDXLayout({ data = {} }) {
       return renderProperties(defObject);
     }
 
-    const endpoints = Object.keys(api.paths)
-      .filter(path => paths.some(entry => path.startsWith(entry)))
-      .filter(path => !path.split("/").includes("internal"))
-      .map(path => {
-        return {
-          path,
-          operations: Object.keys(api.paths[path])
-            .filter(method => method !== "parameters")
-            .filter(method => !method?.tags?.some(tag => ["private", "system"].includes(tag)))
-            .map(method => {
-              const apiMethod = api.paths[path][method]
-              const parameters = apiMethod?.parameters;
-              const responses = apiMethod?.responses;
-              const bodyParameter = parameters?.find(parameter => parameter.name === "body");
-              let body;
-
-              if (bodyParameter) {
-                body = bodyParameter.schema?.$ref ?
-                  extractDefinition(bodyParameter.schema?.$ref) :
-                  renderProperties(bodyParameter.schema);
-              }
-
-              return ({
-                method,
-                ...apiMethod,
-                body: JSON.stringify(body, null, 2),
-                parameters: parameters?.filter(parameter => parameter.name !== "body") || [],
-                pathParameters: api.paths[path]?.parameters || [],
-                responseMessages: Object.keys(responses || {}).map(
-                  response => {
-                    return ({
-                      code: response,
-                      ...responses[response],
-                      schema: JSON.stringify(extractDefinition(responses[response]?.schema?.$ref), null, 2),
-                    })
-                  }
-                ),
-              })
-            }),
-        };
-      });
-
     return <Swagger documentation={{ apis: endpoints }} prefix="https://api.spectrocloud.com" />;
   }
 
@@ -155,7 +213,8 @@ export default function MDXLayout({ data = {} }) {
             fill="url(#paint1_linear)"
           />
         }
-        extraMenu={<ApiSidebar allMdx={allMdx} />}
+        extraMenu={<div className={"xxx"} style={{ marginLeft: 20 }}><AppSidebar data={apiObj.v1} count={-1} /></div>}
+        // extraMenu={<ApiSidebar allMdx={allMdx} />}
       >
         <DocsLayout
           menu={menu}

@@ -36,7 +36,6 @@ const getVersions = edges => {
   }, new Set());
 
   return [...versions].sort().reverse();
-  s;
 };
 
 const extractApiMenu = (edges, selectedVersion) => {
@@ -74,16 +73,15 @@ export default function ApiSidebar({ allMdx }) {
   }, [allMdx.edges]);
 
   const [selectedVersion, updateSelectedVersion] = useState(versions[0]);
-  const apiMenu = useMemo(() => {
+  let apiMenu = useMemo(() => {
     return extractApiMenu(allMdx.edges, selectedVersion);
   }, [allMdx.edges, selectedVersion]);
-
   return (
     <Wrap>
       <SelectWrap>
         <StyledSelect value={selectedVersion} onChange={updateSelectedVersion}>
-          {versions.map(version => (
-            <Select.Option value={version}>{version}</Select.Option>
+          {versions.map((version, index) => (
+            <Select.Option key={index} value={version}>{version}</Select.Option>
           ))}
         </StyledSelect>
       </SelectWrap>
