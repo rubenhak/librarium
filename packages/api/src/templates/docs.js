@@ -58,7 +58,7 @@ export default function MDXLayout({ data = {} }) {
 
   const api = APIS[mdx?.fields?.version || "v1"];
   const paths = mdx.frontmatter?.paths;
-  const endpoints = Object.keys(api.paths)
+  const apiEndpoints = Object.keys(api.paths)
     .map(path => {
         return {
             path,
@@ -77,7 +77,7 @@ export default function MDXLayout({ data = {} }) {
         };
     });
 
-  const apiObj = formatApi(endpoints);
+  const apiObj = formatApi(apiEndpoints);
 
   if(Array.isArray(mdx.frontmatter?.paths)) {
       let urlPathName = mdx.frontmatter?.paths[0];
@@ -136,9 +136,9 @@ export default function MDXLayout({ data = {} }) {
               };
           });
 
-
     function renderProperties(defObject) {
       // if there are no properties, render the format or type (this seems to apply only for timestamps)
+
       if (!defObject?.properties) {
         return defObject?.format || defObject.type;
       }
@@ -147,6 +147,8 @@ export default function MDXLayout({ data = {} }) {
         .reduce((propertiesAcc, property) => {
           const definitionProperty = defObject.properties[property];
           const definitionPropertyRef = definitionProperty?.$ref || definitionProperty?.items?.$ref;
+
+          if(definitionPropertyRef === '#/definitions/v1MgmtErrStack') return {};
 
           const propertyName = definitionProperty?.description?.includes("Deprecated") ? `${property} deprecated` : property;
           // if the property contains a ref, call again extractDefinition
@@ -168,6 +170,11 @@ export default function MDXLayout({ data = {} }) {
               // if the property value is an object that contains the properties key
               // call again renderProperties function in case it has refs inside
               // otherwise render the property type
+
+                // if(definitionProperty == defObject?.properties ) {
+                //     return definitionProperty.type;
+                // }
+
               return ({
                 ...propertiesAcc,
                 [propertyName]: definitionProperty?.properties ?
