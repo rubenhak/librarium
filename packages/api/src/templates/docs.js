@@ -171,10 +171,6 @@ export default function MDXLayout({ data = {} }) {
               // call again renderProperties function in case it has refs inside
               // otherwise render the property type
 
-                // if(definitionProperty == defObject?.properties ) {
-                //     return definitionProperty.type;
-                // }
-
               return ({
                 ...propertiesAcc,
                 [propertyName]: definitionProperty?.properties ?
