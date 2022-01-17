@@ -151,7 +151,7 @@ profile section. Spectro Cloud provides several cluster profiles out-of-the-box.
 ## Create your Clusters
 * [Create Cluster](/clusters/new-clusters/#creatingclusters)
 ## Import Existing Clusters
-* [Cluster Import](/clusters/brownfield-clusters/#overview) of brown field clusters
+* [Cluster Import](/clusters/brownfield-clusters/#overview) brownfield clusters
 ## Manage your Clusters
 * [Cluster Management](/clusters/cluster-management/#manageclusters)
 
