@@ -17,7 +17,7 @@ export default function MDXLayout({ data = {} }) {
     allMdx,
     mdx,
     site: {
-      siteMetadata: { apiLocation },
+      siteMetadata: { docsLocation },
     },
   } = data;
 
@@ -162,7 +162,7 @@ export default function MDXLayout({ data = {} }) {
         menu={menu}
         mdx={mdx}
         fullWidth={mdx.frontmatter?.fullWidth || mdx.frontmatter?.api}
-        docsLocation={apiLocation}
+        docsLocation={docsLocation}
         hideToCSidebar={mdx.frontmatter?.hideToCSidebar}
         edges={allMdx.edges}
         extraContent={renderAPIDoc()}
@@ -176,7 +176,7 @@ export const pageQuery = graphql`
     site {
       siteMetadata {
         title
-        apiLocation
+        docsLocation
       }
     }
     mdx(fields: { id: { eq: $id } }) {
